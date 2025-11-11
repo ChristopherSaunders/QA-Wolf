@@ -1,6 +1,7 @@
 // EDIT THIS FILE TO COMPLETE ASSIGNMENT QUESTION 1
 const { chromium } = require("playwright");
 const { expect } = require("playwright/test");
+const ARTICLE_LIMIT = 100;
 
 async function sortHackerNewsArticles() {
   // launch browser
@@ -20,7 +21,8 @@ async function sortHackerNewsArticles() {
   await sortHackerNewsArticles();
 })();
 
-
+//If all articles on page is sorted && Not at limit->
+//click more link
 async function checkArticles(page, articles){
   const bigbox = await page.locator("#bigbox");
   const ranks = await bigbox.locator(".rank").allInnerTexts();
@@ -30,17 +32,22 @@ async function checkArticles(page, articles){
   if(!await compareArticles({ranks: ranks,titles: titles,ages: ages}, articles)) 
     return;
 
-  if(articles.length < 100){
+  if(articles.length < ARTICLE_LIMIT){
     await bigbox.locator(".morelink").click();
     await checkArticles(page,articles);
   }
 }
 
+
+// Print data
+// Close Brower
 async function finishTest(browser, data=[]){
   console.log(data);
   await browser.close();
 }
 
+//Verifies page data loads as expected
+//throws error if not
 async function checkLength(articleInfo){
   try{
     await expect(articleInfo.titles.length === articleInfo.ages.length
@@ -60,6 +67,11 @@ async function checkLength(articleInfo){
   }
 }
 
+//Goes thru Articles on page
+//Compares Current Articles to Articles verified to be sort
+//if sorted->
+//Push article to saved SortedArticles
+//Else throw error
 async function compareArticles(articlesInfo, sortedArticles){
    if(!await checkLength(articlesInfo))
     return false;
@@ -70,7 +82,7 @@ async function compareArticles(articlesInfo, sortedArticles){
     let art_time = time.split(" ")[0];
     let secs = parseInt(time.split(" ")[1]);
 
-    if(sortedArticles.length < 100){
+    if(sortedArticles.length < ARTICLE_LIMIT){
       if(sortedArticles.length > 0){
         try{
           await expect(sortedArticles[sortedArticles.length-1].age >= secs).toBeTruthy();
